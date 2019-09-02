@@ -13,16 +13,17 @@ def main():
     print('Logging in...')
     s = login(username, password)
     network_id = get_network_id()
-    date = (datetime.today() - timedelta(days=2)).date()
+    date = (datetime.today() - timedelta(days=1)).date()
     print('Fetching report...')
     data = get_report_csv(s, network_id, date)
     if data:
         print('Rendering report...')
         buffer = io.StringIO()
         render_message(buffer, data, date)
+        print()
         print(buffer.getvalue())
     else:
-        print(f'No domains blocked on {date}.')
+        print(f'No OpenDNS domains blocked on {date:%A, %B %d, %Y}.')
 
 
 def get_credentials():
@@ -64,7 +65,7 @@ def get_report_csv(s, network_id, date):
 
 
 def render_message(buffer, data, date):
-    print(f'Domains blocked on {date}:', file=buffer)
+    print(f'OpenDNS domains blocked on {date:%A, %B %d, %Y}:', file=buffer)
     data_iter = iter(data)
     header = next(data_iter)
     for domain in data_iter:
