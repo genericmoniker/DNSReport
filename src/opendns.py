@@ -35,7 +35,8 @@ def get_report_csv(s, network_id, date):
 
 
 def render_report(buffer, data, date):
-    print(f'OpenDNS domains blocked on {date:%A, %B %d, %Y}:', file=buffer)
+    print(f'Domains blocked on {date:%A, %B %d, %Y}:', file=buffer)
+    print(file=buffer)
     data_iter = iter(data)
     header = next(data_iter)
     for domain in data_iter:
@@ -44,6 +45,7 @@ def render_report(buffer, data, date):
         count = domain[2]
         reason = _get_block_reason(header, domain)
         print(f'{rank}. {name} ({count}) - {reason}', file=buffer)
+    return f'OpenDNS report for {date:%A, %B %d, %Y}'
 
 
 def _get_block_reason(header, domain):

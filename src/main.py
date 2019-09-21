@@ -1,9 +1,11 @@
 import io
+import smtplib
 
 from datetime import datetime, timedelta
 
 import config
 import opendns
+import notify
 
 
 def main():
@@ -15,9 +17,16 @@ def main():
     if data:
         print('Rendering report...')
         buffer = io.StringIO()
-        opendns.render_report(buffer, data, date)
+        subject = opendns.render_report(buffer, data, date)
         print()
         print(buffer.getvalue())
+        try:
+            print('Sending email...')
+            notify.send_report(subject, buffer.getvalue())
+        except Exception as e:
+            print('Failed to send email:', e)
+        else:
+            print('Done!')
     else:
         print(f'No OpenDNS domains blocked on {date:%A, %B %d, %Y}.')
 
