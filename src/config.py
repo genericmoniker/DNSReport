@@ -1,15 +1,24 @@
+import json
 import os
 from pathlib import Path
 
 
+# Load config from secrets, if possible.
+try:
+    _secret_conf = json.loads(Path('/run/secrets/conf').read())
+    print('Using config from secrets.')
+except Exception:
+    _secret_conf = {}
+    print('Using config from environment.')
+
+
 def get(key):
-    # Try Docker secrets.
-    try:
-        return (Path('/run/secrets') / key).read()
-    except Exception:
-        pass
-    # Try environment variable.
-    return os.getenv(key)
+    """Get a config value.
+
+    Tries to get the value from a secret file, otherwise from an environment
+    variable. See https://docs.docker.com/compose/compose-file/#secrets
+    """
+    return _secret_conf.get(key, os.getenv(key))
 
 
 OPEN_DNS_USERNAME = get('DNSREPORT_USERNAME')
