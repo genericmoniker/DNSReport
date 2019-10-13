@@ -1,7 +1,6 @@
 import smtplib
 
-import config
-import mailer
+from dnsreport import config, mailer
 
 
 def send_report(report_subject, report_body):

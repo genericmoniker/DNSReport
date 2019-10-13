@@ -10,8 +10,12 @@ COPY poetry.lock .
 RUN pip install --user --upgrade pip
 RUN pip install --user poetry
 
-COPY . .
-
+# Install just the dependencies (for caching).
 RUN /home/appuser/.local/bin/poetry install --no-dev -v 
 
-CMD ["python", "./src/main.py"]
+COPY . .
+
+# Install the app itself.
+RUN /home/appuser/.local/bin/poetry install --no-dev -v 
+
+CMD ["/home/appuser/.local/bin/poetry", "run", "python", "-m", "dnsreport"]
