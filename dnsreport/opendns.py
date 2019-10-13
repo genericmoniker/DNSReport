@@ -3,6 +3,10 @@ import re
 
 import requests
 
+_RANK = 0
+_NAME = 1
+_COUNT = 2
+
 
 def login(username, password):
     url = 'https://login.opendns.com/?source=dashboard'
@@ -34,18 +38,32 @@ def get_report_csv(s, network_id, date):
     return csv.reader(r.text.splitlines())
 
 
-def render_report(buffer, data, date):
+def render_report(buffer, data, date, whitelist):
+    """Render the blocked domains report.
+
+    :param buffer: buffer into which the report is rendered.
+    :param data: CSV data of the report.
+    :param date: date for the data.
+    :param whitelist: list of domains to ignore in the report.
+    :return: report subject, or None if no blocked domains.
+    """
     print(f'Domains blocked on {date:%A, %B %d, %Y}:', file=buffer)
     print(file=buffer)
     data_iter = iter(data)
     header = next(data_iter)
+    has_blocked_domains = False
     for domain in data_iter:
-        rank = domain[0]
-        name = domain[1]
-        count = domain[2]
+        name = domain[_NAME]
+        if name in whitelist:
+            continue
+        rank = domain[_RANK]
+        count = domain[_COUNT]
         reason = _get_block_reason(header, domain)
         print(f'{rank}. {name} ({count}) - {reason}', file=buffer)
-    return f'OpenDNS report for {date:%A, %B %d, %Y}'
+        has_blocked_domains = True
+    if has_blocked_domains:
+        return f'OpenDNS report for {date:%A, %B %d, %Y}'
+    return None
 
 
 def _get_block_reason(header, domain):
