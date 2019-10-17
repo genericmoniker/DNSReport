@@ -35,6 +35,14 @@ def csv_empty():
         yield
 
 
+def get_report(whitelist):
+    today = date.today()
+    csv = get_report_csv(requests.session(), 'id', today)
+    buffer = io.StringIO()
+    render_report(buffer, csv, today, whitelist)
+    return buffer.getvalue()
+
+
 def test_all_data_rows_returned(csv):
     csv = get_report_csv(requests.session(), 'id', date.today())
     data = list(csv)
@@ -67,12 +75,9 @@ def test_report_without_data_does_not_have_subject(csv_empty):
 
 
 def test_block_reason_is_correct(csv):
-    today = date.today()
-    csv = get_report_csv(requests.session(), 'id', today)
-    buffer = io.StringIO()
-    render_report(buffer, csv, today, [])
+    report = get_report([])
     matches = 0
-    for line in buffer.getvalue().splitlines():
+    for line in report.splitlines():
         if 'proxy.googlezip.net' in line:
             assert 'Proxy/Anonymizer' in line
             matches += 1
@@ -93,10 +98,15 @@ def test_block_reason_is_correct(csv):
 
 def test_whitelist_domains_not_in_report(csv):
     whitelist = ['proxy.googlezip.net', 'noruleshere.com']
-    today = date.today()
-    csv = get_report_csv(requests.session(), 'id', today)
-    buffer = io.StringIO()
-    render_report(buffer, csv, today, whitelist)
-    report = buffer.getvalue()
+    report = get_report(whitelist)
     assert 'proxy.googlezip.net' not in report
     assert 'noruleshere.com' not in report
+
+
+def test_non_whitelist_domains_are_numbered_sequentially(csv):
+    whitelist = ['www.yourtango.com']
+    report = get_report(whitelist)
+    assert '1. proxy.googlezip.net' in report
+    assert '2. www.3wishes.com' in report
+    assert '3. noruleshere.com' in report
+    assert '4. www.cosmopolitan.com' in report

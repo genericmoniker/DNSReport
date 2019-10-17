@@ -3,7 +3,6 @@ import re
 
 import requests
 
-_RANK = 0
 _NAME = 1
 _COUNT = 2
 
@@ -17,6 +16,8 @@ def login(username, password):
     data = {'username': username, 'password': password, 'formtoken': token}
     r = s.post(url, data=data)
     r.raise_for_status()
+    if b'Forgot password?' in r.content:
+        raise Exception('Invalid OpenDNS credentials.')
     return s
 
 
@@ -51,19 +52,20 @@ def render_report(buffer, data, date, whitelist):
     print(file=buffer)
     data_iter = iter(data)
     header = next(data_iter)
-    has_blocked_domains = False
-    for domain in data_iter:
+
+    filtered = [d for d in data_iter if d[_NAME] not in whitelist]
+    if not filtered:
+        return None
+
+    for i, domain in enumerate(filtered, start=1):
         name = domain[_NAME]
-        if name in whitelist:
-            continue
-        rank = domain[_RANK]
         count = domain[_COUNT]
         reason = _get_block_reason(header, domain)
-        print(f'{rank}. {name} ({count}) - {reason}', file=buffer)
-        has_blocked_domains = True
-    if has_blocked_domains:
-        return f'OpenDNS report for {date:%A, %B %d, %Y}'
-    return None
+        # Note: We use `i` instead of the rank from the domain so that
+        # whitelisted domains don't leave gaps in the numbering.
+        print(f'{i}. {name} ({count}) - {reason}', file=buffer)
+
+    return f'OpenDNS report for {date:%A, %B %d, %Y}'
 
 
 def _get_block_reason(header, domain):
