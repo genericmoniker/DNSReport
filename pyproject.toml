@@ -6,12 +6,12 @@ authors = ["Eric Smith <eric@esmithy.net>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.6"
-requests = "^2.22"
+python = "^3.7"
+requests = "^2.31.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7"
-black = {version = "^18.3-alpha.0",allows-prereleases = true}
+black = "^23.3.0"
 pytest = "^5.2"
 responses = "^0.10.6"
 
